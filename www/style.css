@@ -1,0 +1,13 @@
+body{
+  background: #f3fab6;
+}
+
+/* Custom font */
+@font-face{
+  font-family: Building;
+  src: url('./building_typeface.ttf');
+}
+
+body > h1{
+  font-family: Building, arial;
+}
