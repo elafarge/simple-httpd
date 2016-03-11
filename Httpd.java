@@ -1,6 +1,6 @@
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,12 +8,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.util.zip.GZIPOutputStream;
-
-import javax.imageio.stream.ImageOutputStream;
-
-import org.omg.CORBA.portable.OutputStream;
 
 
 // $Id: Httpd.java 358 2014-03-05 08:10:19Z coelho $
@@ -129,7 +123,7 @@ class HandleHttpRequest extends Thread
     // if an exception is to be thrown, it will be done before we start
     // replying "200 OK" to the dearest of all our clients !
     File f = new File(path);
-    //FileInputStream fis = new FileInputStream(f);
+    FileInputStream fis = new FileInputStream(f);
 
     // Ok now we can start sending our headers, if an exception happens while
     // our file is being read though, there's not way to tell what the client
@@ -137,18 +131,12 @@ class HandleHttpRequest extends Thread
     out.println("HTTP/1.0 200 OK");
     out.println("Content-Type: " + type);
     out.println("Content-Length: " + f.length());
-    // out.println("Content-Encoding: x-gzip");
     // Parce que le comique de répétition, c'est tellement pourri que ça fait
     // rire les gens...
     out.println("Server: Tomahawk 2.0");
-    out.println("\r\n");
+    out.println("");
 
-    //swallowFileContent(fis, out);
-    // GZIPOutputStream gos = new GZIPOutputStream(out);
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
-    Files.copy(f.toPath(), os);
-    os.writeTo(out);
-    os.close();
+    swallowFileContent(fis, out);
 
     out.flush();
   }
@@ -156,12 +144,9 @@ class HandleHttpRequest extends Thread
   public void swallowFileContent(InputStream fis, PrintStream fos)
       throws IOException{
     int n;
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
     byte[] buffer = new byte[65536];
     while((n = fis.read(buffer)) != -1)
-        baos.write(buffer, 0, n);
-    baos.writeTo(fos);
-    baos.close();
+        fos.write(buffer, 0, n);
   }
 
   // exécution de la thread
@@ -215,8 +200,6 @@ class HandleHttpRequest extends Thread
         replyWith500(out);
 
       // Otherwise let's just put the error in our logs (see below)
-      // ...
-
       System.err.println(e);
       e.printStackTrace();
 
